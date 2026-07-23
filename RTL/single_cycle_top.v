@@ -13,8 +13,8 @@ module single_cycle_top(clk,rst);
 
 input clk,rst;
 
-wire RegWrite, MemWrite, ALUSrc, ResultSrc;
-wire [31:0] PC, PC_next, pc_plus_4, RD_instr, imm_ext, RD1, RD2, ALUResult, src_B, Read_data, Result
+wire RegWrite, MemWrite, ALUSrc, ResultSrc, zero;
+wire [31:0] PC, pc_plus_4, RD_instr, imm_ext, RD1, RD2, ALUResult, src_B, Read_data, Result;
 wire [1:0] imm_src;
 wire [2:0] ALUControl;
 
@@ -24,7 +24,7 @@ instruction_memory instruction_memory(.A(PC),
 program_counter program_counter(.clk(clk),
                                 .rst(rst),
                                 .PC(PC),
-                                .PC_next(PC_next));
+                                .PC_next(pc_plus_4));
 
 pc_adder pc_adder(.A(PC),
                   .B(32'd4),
@@ -34,12 +34,12 @@ alu alu(.A(RD1),
         .B(src_B),
         .ALUControl(ALUControl),
         .Result(ALUResult),
-        .Z(),
+        .Z(zero),
         .N(),
         .V(),
         .C());
 
-control_unit_top control_unit_top(.Z(),
+control_unit_top control_unit_top(.Z(zero),
                                   .opcode(RD_instr[6:0]),
                                   .PCSrc(),
                                   .ResultSrc(ResultSrc),
@@ -48,7 +48,7 @@ control_unit_top control_unit_top(.Z(),
                                   .ImmSrc(imm_src),
                                   .RegWrite(RegWrite),
                                   .funct3(RD_instr[14:12]),
-                                  .funct7(RD_instr[6:0]),
+                                  .funct7(RD_instr[31:25]),
                                   .ALUControl(ALUControl));
 
 register_file register_file(.A1(RD_instr[19:15]),
